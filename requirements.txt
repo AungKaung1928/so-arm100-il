@@ -1,0 +1,13 @@
+# Python >= 3.12 (lerobot). CPU-only torch: install it first from the CPU index,
+#   pip install torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cpu
+# then the rest. Versions are the ones every number in the README was measured on.
+so-arm100-sim[lerobot] @ git+https://github.com/AungKaung1928/so-arm100-sim.git@v0.1.0
+lerobot[dataset]==0.6.1
+mujoco==3.13.0
+numpy>=1.26,<3
+matplotlib
+pillow
+pytest
+# Experimental human-video path only:
+mediapipe==1.0.1
+opencv-python-headless

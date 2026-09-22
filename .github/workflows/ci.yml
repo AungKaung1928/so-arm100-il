@@ -1,0 +1,27 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      OMP_NUM_THREADS: "2"
+      MUJOCO_GL: egl
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: system GL for offscreen rendering
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libegl1 libgl1 libosmesa6
+      - name: install
+        run: |
+          pip install torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cpu
+          pip install -r requirements.txt
+          pip install -e ".[dev]"
+      - name: tests
+        run: python -m pytest tests

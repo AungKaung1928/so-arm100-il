@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "so-arm100-il"
+version = "0.1.0"
+description = "Behaviour cloning, DAgger and an ACT-style chunked policy on the SO-ARM100 MuJoCo bench"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.12"
+dependencies = [
+    "so-arm100-sim[lerobot]>=0.1.0",
+    "torch>=2.4",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+plots = ["matplotlib", "pillow"]
+video = ["mediapipe>=0.10", "opencv-python-headless"]
+dev = ["pytest>=8"]
+
+[tool.setuptools]
+packages = ["so_arm100_il"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]
