@@ -11,6 +11,8 @@ model needs. CPU only.
 `TODO(measure)` names the command that fills it in from a JSON; none is
 typed by hand.
 
+**Walkthrough:** https://aungkaung1928.github.io/projects/so-arm100.html — the bench and the three policy projects built on it, explained end to end.
+
 ## Why imitation after reinforcement learning on the same bench
 
 The sibling project [`so-arm100-rl`](https://github.com/AungKaung1928/so-arm100-rl)
@@ -124,7 +126,7 @@ pip install -r requirements.txt && pip install -e ".[dev]"
 
 Python ≥ 3.12 (lerobot). `MUJOCO_GL=glfw` with a display or `egl`/`osmesa`
 headless for anything that renders. `docker build -t so-arm100-il . && docker run --rm so-arm100-il`
-runs the tests that need no GL context.
+runs the tests that need no GL context. Image built on 2026-09-23 and its default command passed inside it (17 tests passed, 2 skipped), image size 3.16 GB.
 
 The test suite includes an end-to-end smoke: record three 8-step episodes
 through the bench recorder, train all three models for two epochs, evaluate

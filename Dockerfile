@@ -15,7 +15,7 @@ COPY tests ./tests
 COPY scripts ./scripts
 COPY train_bc.py dagger.py eval_policy.py scaling.py verify.sh ./
 
-RUN pip install --no-cache-dir torch==2.11.0 --index-url https://download.pytorch.org/whl/cpu \
+RUN pip install --no-cache-dir torch==2.11.0 --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple \
  && pip install --no-cache-dir -r requirements.txt \
  && pip install --no-cache-dir -e ".[dev]"
 
