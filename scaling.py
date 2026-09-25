@@ -10,6 +10,10 @@ success rate. The figure is mean +- std over seeds against episodes on a
 log x-axis. This is the result the project is for: how many demonstrations
 each model needs before its success stops improving, and whether ACT's
 chunking changes that slope.
+
+Every finished (size, seed) row is appended to `<out>.rows.jsonl` at once;
+a rerun of the same command skips the rows already there, so a killed run
+loses at most the row in progress.
 """
 import argparse
 import json
@@ -25,14 +29,27 @@ from so_arm100_il.policy import LearnedPolicy
 from so_arm100_il.training import train
 
 
-def run(episodes, kind, sizes, seeds, task, eval_n, eval_seeds, epochs, env_kwargs, threads, log=print):
-    rows = []
+def load_rows(path):
+    if not path or not os.path.exists(path):
+        return []
+    with open(path) as f:
+        return [json.loads(line) for line in f if line.strip()]
+
+
+def run(episodes, kind, sizes, seeds, task, eval_n, eval_seeds, epochs, env_kwargs, threads, log=print,
+        rows_path=None):
+    rows = load_rows(rows_path)
+    have = {(r["size"], r["seed"]) for r in rows}
+    if have:
+        log(f"  resuming: {len(have)} rows already in {rows_path}")
     for size in sizes:
         subset = episodes[:size]
         if len(subset) < size:
             log(f"  only {len(subset)} episodes available; size {size} skipped")
             continue
         for seed in range(seeds):
+            if (size, seed) in have:
+                continue
             t0 = time.perf_counter()
             model, stats, hist = train(subset, kind, epochs=epochs, seed=seed, threads=threads,
                                        log=lambda *_: None)
@@ -41,6 +58,9 @@ def run(episodes, kind, sizes, seeds, task, eval_n, eval_seeds, epochs, env_kwar
             rows.append({"size": size, "seed": seed, "success": r["success_rate"],
                          "val_l1": hist[-1]["val_l1"], "train_l1": hist[-1]["train_l1"],
                          "wall_s": time.perf_counter() - t0})
+            if rows_path:
+                with open(rows_path, "a") as f:
+                    f.write(json.dumps(rows[-1]) + "\n")
             log(f"  size {size:4d} seed {seed}  success {r['success_rate']:.2f}  "
                 f"val L1 {hist[-1]['val_l1']:.4f}  {rows[-1]['wall_s']:.0f} s")
     return rows
@@ -102,11 +122,13 @@ def main():
         env_kwargs["image"] = {"camera": "front", "height": a.image_h, "width": a.image_w}
     eps = load_dataset(a.root, a.repo_id, n_episodes=max(a.sizes), with_images=a.model != "state")
     print(f"{len(eps)} episodes loaded; model {a.model}; sizes {a.sizes}; {a.seeds} seeds")
-    rows = run(eps, a.model, a.sizes, a.seeds, a.task, a.eval_n, a.eval_seeds, a.epochs,
-               env_kwargs, a.threads)
-    summary = summarise(rows)
     out = a.out or f"runs/scaling_{a.model}{'_smoke' if a.smoke else ''}.json"
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
+    rows = run(eps, a.model, a.sizes, a.seeds, a.task, a.eval_n, a.eval_seeds, a.epochs,
+               env_kwargs, a.threads, rows_path=os.path.splitext(out)[0] + ".rows.jsonl")
+    rows = [r for r in rows if r["size"] in a.sizes and r["seed"] < a.seeds]
+    rows.sort(key=lambda r: (r["size"], r["seed"]))
+    summary = summarise(rows)
     with open(out, "w") as f:
         json.dump({"args": vars(a), "rows": rows, "summary": summary, **provenance()}, f, indent=2)
     fig = plot(summary, a.model, f"out/scaling_{a.model}{'_smoke' if a.smoke else ''}.png")
