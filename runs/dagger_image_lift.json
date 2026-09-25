@@ -1,0 +1,91 @@
+{
+  "iters": [
+    {
+      "iter": 0,
+      "beta": 0.5,
+      "frames_total": 16265,
+      "rollout_success_mixed": 0.8,
+      "learner_success": 0.05
+    },
+    {
+      "iter": 1,
+      "beta": 0.25,
+      "frames_total": 18297,
+      "rollout_success_mixed": 0.7,
+      "learner_success": 0.2
+    },
+    {
+      "iter": 2,
+      "beta": 0.125,
+      "frames_total": 20572,
+      "rollout_success_mixed": 0.6,
+      "learner_success": 0.1
+    },
+    {
+      "iter": 3,
+      "beta": 0.0625,
+      "frames_total": 23254,
+      "rollout_success_mixed": 0.35,
+      "learner_success": 0.05
+    },
+    {
+      "iter": 4,
+      "beta": 0.03125,
+      "frames_total": 25893,
+      "rollout_success_mixed": 0.35,
+      "learner_success": 0.05
+    }
+  ],
+  "args": {
+    "root": "data/lift_red",
+    "repo_id": "local/so_arm100_lift_red",
+    "task": "lift:red",
+    "model": "image",
+    "n_episodes": null,
+    "iters": 5,
+    "rollouts": 20,
+    "beta0": 0.5,
+    "beta_decay": 0.5,
+    "epochs": 20,
+    "warm": false,
+    "eval_n": 20,
+    "final_n": 100,
+    "final_seeds": 5,
+    "seed": 0,
+    "threads": 4,
+    "out": "runs/dagger_image_lift.pt",
+    "image_h": 96,
+    "image_w": 128
+  },
+  "final": {
+    "task": "lift:red",
+    "physics": "nominal",
+    "dr": null,
+    "n_episodes": 100,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "success_rate": 0.13599999999999998,
+    "success_std": 0.0650384501660364,
+    "per_seed": [
+      0.18,
+      0.06,
+      0.09,
+      0.22,
+      0.13
+    ],
+    "return_mean": -0.8348088576203929,
+    "steps_mean": 140.766,
+    "first_success_p50": 76.5,
+    "first_success_p90": 129.3,
+    "wall_s": 3270.7057032509983,
+    "so_arm100_sim": "0.1.0",
+    "model_commit": "822c2d8f877dd166c5b7d3c9f7e3c3b6589473b7",
+    "date": "2026-09-25 20:10"
+  },
+  "wall_s": 5969.703209067
+}
