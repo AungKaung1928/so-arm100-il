@@ -5,7 +5,8 @@
 
 For each size and seed: train on the first `size` episodes (the same first
 episodes for every seed, so seeds differ only in initialisation and
-shuffling), evaluate with the bench protocol on nominal physics, record the
+shuffling), evaluate on nominal physics (--eval-n episodes on --eval-seeds
+seeds, default 50 on one: lighter than the bench's 100 x 5), record the
 success rate. The figure is mean +- std over seeds against episodes on a
 log x-axis. This is the result the project is for: how many demonstrations
 each model needs before its success stops improving, and whether ACT's
