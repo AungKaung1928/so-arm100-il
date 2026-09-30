@@ -13,8 +13,8 @@ none is typed by hand. Headline: from the same 200 scripted demonstrations
 an ACT-style chunked policy lifts the cube 0.77 of the time against 0.05
 for single-step cloning (expert 0.93), and in the scaling curve more
 demonstrations do not help single-step cloning while ACT is still climbing
-at 200. One training seed per table except the scaling curve (three), and
-the scaling curve shows that the training seed matters a lot.
+at 200. One training seed per table except the scaling curve (three, six
+for ACT), and the scaling curve shows that the training seed matters a lot.
 
 **Walkthrough:** https://aungkaung1928.github.io/projects/so-arm100.html — the bench and the three policy projects built on it, explained end to end.
 
@@ -83,39 +83,41 @@ on the expert's own states, and the held-out table below is what counts.
 ## The experiments
 
 **Scaling curve** (`scaling.py`): for sizes 10, 25, 50, 100, 200 episodes
-and 3 seeds each, train on the first `size` episodes for 20 epochs and
+and 3 training seeds each (6 for `act`), train on the first `size` episodes for 20 epochs and
 evaluate 50 episodes on one evaluation seed. That is lighter than the bench
 protocol (100 × 5) and the 30 epochs of the training table above, to keep 15
 runs per model affordable on CPU. Same first episodes for every training
 seed, so seeds differ only in initialisation and shuffling; a cell is mean ±
-sd over the 3 training seeds, so its spread is training variance, not
+sd over the training seeds, so its spread is training variance, not
 evaluation noise (at 50 episodes one success is 0.02).
 
 `nice -n 10 python scaling.py --root data/lift_red --repo-id local/so_arm100_lift_red --task lift:red --model image --sizes 10 25 50 100 200 --seeds 3` → `runs/scaling_image.json`, `out/scaling_image.png`
 
 | episodes | `state` | `image` | `act` |
 |---|---|---|---|
-| 10 | 0.01 ± 0.01 | 0.01 ± 0.01 | 0.13 ± 0.13 |
-| 25 | 0.01 ± 0.01 | 0.03 ± 0.01 | 0.26 ± 0.17 |
-| 50 | 0.00 ± 0.00 | 0.02 ± 0.03 | 0.41 ± 0.36 |
-| 100 | 0.02 ± 0.00 | 0.04 ± 0.02 | 0.49 ± 0.35 |
-| 200 | 0.03 ± 0.01 | 0.05 ± 0.06 | 0.66 ± 0.37 |
+| 10 | 0.01 ± 0.01 | 0.01 ± 0.01 | 0.08 ± 0.10 |
+| 25 | 0.01 ± 0.01 | 0.03 ± 0.01 | 0.24 ± 0.19 |
+| 50 | 0.00 ± 0.00 | 0.02 ± 0.03 | 0.30 ± 0.28 |
+| 100 | 0.02 ± 0.00 | 0.04 ± 0.02 | 0.41 ± 0.29 |
+| 200 | 0.03 ± 0.01 | 0.05 ± 0.06 | 0.51 ± 0.36 |
 
 ![success against demonstrations for the three models](out/scaling_all.png)
 
 Measured 2026-09-25 (`state`) and 2026-09-30 (`image`, `act`), 3 training
-seeds × 50 episodes per cell; the faint points in the figure are the single
-seeds. 90 and 92 min wall for the 15 image and 15 ACT runs, most of it
+seeds (`state`, `image`) and 6 (`act`) × 50 episodes per cell; the faint
+points in the figure are the single seeds. 90 min wall for the 15 image
+runs and 196 min for the 30 ACT runs (seeds 3–5 added the same day with
+`--seeds 6`, which resumes and skips the finished rows), most of it
 rendering during evaluation (`out/scaling_all.png` from `scripts/plot_scaling.py`).
-Per seed (0 / 1 / 2):
+Per seed:
 
-| episodes | `image` | `act` |
+| episodes | `image` (0 / 1 / 2) | `act` (0 / 1 / 2 / 3 / 4 / 5) |
 |---|---|---|
-| 10 | 0.00 / 0.00 / 0.02 | 0.28 / 0.08 / 0.04 |
-| 25 | 0.02 / 0.04 / 0.02 | 0.34 / 0.06 / 0.38 |
-| 50 | 0.00 / 0.00 / 0.06 | 0.76 / 0.04 / 0.44 |
-| 100 | 0.04 / 0.06 / 0.02 | 0.82 / 0.12 / 0.54 |
-| 200 | 0.02 / 0.00 / 0.12 | 0.92 / 0.24 / 0.82 |
+| 10 | 0.00 / 0.00 / 0.02 | 0.28 / 0.08 / 0.04 / 0.00 / 0.04 / 0.02 |
+| 25 | 0.02 / 0.04 / 0.02 | 0.34 / 0.06 / 0.38 / 0.08 / 0.50 / 0.10 |
+| 50 | 0.00 / 0.00 / 0.06 | 0.76 / 0.04 / 0.44 / 0.12 / 0.40 / 0.06 |
+| 100 | 0.04 / 0.06 / 0.02 | 0.82 / 0.12 / 0.54 / 0.22 / 0.62 / 0.14 |
+| 200 | 0.02 / 0.00 / 0.12 | 0.92 / 0.24 / 0.82 / 0.12 / 0.76 / 0.18 |
 
 What the curve says:
 
@@ -126,26 +128,35 @@ What the curve says:
   compounding error measured below is not a data-quantity problem at this
   scale. The 200-episode cell (0.05 ± 0.06) agrees with the 100 × 5
   evaluation of the 30-epoch model (0.05 ± 0.02).
-- **ACT climbs and has not levelled off at 200.** The mean rises 0.13,
-  0.26, 0.41, 0.49, 0.66, and seeds 0 and 2 improve at every step.
-  Where it stops is past the largest size measured.
+- **ACT's mean climbs and has not levelled off at 200.** The mean rises
+  0.08, 0.24, 0.30, 0.41, 0.51. Seeds 0 and 2 improve at every step; seed
+  3 drops from 0.22 to 0.12 between 100 and 200. Where the mean stops is
+  past the largest size measured.
 - **The training seed is the biggest term, bigger than the dataset size.**
-  At 200 episodes ACT's seeds score 0.92, 0.82 and 0.24. At 50 episodes one
-  success is 0.02 and the binomial standard error of a 0.5 rate is 0.07, so
-  a spread of 0.37 is training variance, not evaluation noise. Seed 1 is
-  worst at every size because a seed fixes the initialisation and the
-  shuffling, and the sizes share them. So the three curves are three
-  initialisations, not fifteen independent draws. The ranking survives it:
-  at 100 and 200 episodes ACT's worst seed is above the image policy's best
-  (0.12 vs 0.06, 0.24 vs 0.12). At 50 it is not (0.04 vs 0.06).
-- **Validation L1 does not pick the good seed.** At 50 episodes the seeds'
-  L1 is 0.142, 0.190 and 0.235 and their success 0.76, 0.04 and 0.44. The
-  middle loss has the worst policy. That is one more reason the final
-  epoch is reported rather than the best one on validation.
+  At 200 episodes ACT's six seeds split into two groups: 0.92, 0.82, 0.76
+  and 0.24, 0.18, 0.12, with nothing between 0.24 and 0.76. The mean of
+  0.51 describes neither group. At 50 episodes one success is 0.02 and the
+  binomial standard error of a 0.5 rate is 0.07, so an sd of 0.28 there is
+  training variance, not evaluation noise. A seed fixes the
+  initialisation and the shuffling, and the sizes share them, so the six
+  curves are six initialisations, not thirty independent draws. Seeds 1,
+  3 and 5 are in the low group at 50, 100 and 200 episodes. The ranking
+  against single-step cloning only partly survives: at 100 episodes ACT's
+  worst seed is above the image policy's best (0.12 vs 0.06); at 200 they
+  tie (0.12 vs 0.12) and at 50 it is below (0.04 vs 0.06). The mean gap
+  is large at every size from 25 up.
+- **Validation L1 does not reliably pick the good seed.** At 50 episodes
+  seeds 0, 1 and 2 have L1 0.142, 0.190 and 0.235 and success 0.76, 0.04
+  and 0.44: the middle loss has the worst policy. At 200 episodes the six
+  seeds' L1 (0.126 to 0.168) does order the two groups correctly, every
+  high-group seed below every low-group one. So the loss carries some
+  signal at the largest size and none at 50; six seeds are too few to say
+  where that changes. The final epoch is still reported, not the best one
+  on validation.
 - **What it means for the other tables.** The ACT results below (0.77 on
   nominal, the held-out table) are one training seed at 30 epochs, and
-  every other policy here is one training seed too. At 20 epochs this curve puts three seeds of
-  the same recipe at 0.24 to 0.92, so the ± over
+  every other policy here is one training seed too. At 20 epochs this curve puts six seeds of
+  the same recipe at 0.12 to 0.92, so the ± over
   evaluation seeds understates the real uncertainty by a wide margin. The
   BC-versus-ACT gap is large enough to survive that; the smaller
   differences in the held-out table (laggy −0.12, weak −0.06) may not.
@@ -193,11 +204,14 @@ Mean ± std over the 5 seeds, 100 episodes each. What the table says:
 - **Chunking is the whole difference.** Same demonstrations, same encoder
   family, same loss: the single-step `ImagePolicy` lifts 0.05 on nominal,
   `ACTLite` 0.77. Replaying a recorded episode through the eval env
-  reproduces the state to 7e-7 and the policy's output on the expert's own
-  trajectory is within 0.005-0.06 rad of the demonstration, so the pipeline
-  is not the problem. Closed loop, the single-step policy's error against
-  the expert grows from 0.4 to 1-4 rad within 50-150 steps: compounding
-  error, the textbook failure of behaviour cloning, measured.
+  reproduces the state to 7e-7 and the rendered frame to 2e-4, and on the
+  expert's own trajectory the policy's worst-joint error against the
+  demonstration is 0.033 rad median, 0.18 at the 95th percentile (77 steps
+  of episode 0), so the pipeline is not the problem. Closed loop, the
+  single-step policy's worst-joint error against the expert grows from
+  0.4-0.5 rad in the first 10 steps to 1.1-4.6 rad by step 60-150
+  (3 evaluation seeds, one of which still lifts): compounding error, the
+  textbook failure of behaviour cloning, measured. Rechecked 2026-09-30.
 - **ACT transfers, with two real losses.** Heavy and noisy stay within noise
   of nominal. Laggy costs 0.12 and weak 0.06, where the expert loses at most
   0.01. The small cube costs ACT 0.39 against the expert's 0.20; a smaller
