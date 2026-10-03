@@ -7,18 +7,50 @@ is measured with the bench's protocol on nominal and held-out physics, and
 the main experiment is a dataset-size curve: how many demonstrations each
 model needs. CPU only.
 
-**Status: measured.** Recording, training, the held-out physics table, DAgger
-and the scaling curve for all three models are filled from their JSONs;
-none is typed by hand. Headline: from the same 200 scripted demonstrations
-an ACT-style chunked policy lifts the cube 0.77 of the time against 0.05
-for single-step cloning (expert 0.93), and in the scaling curve more
-demonstrations do not help single-step cloning while ACT is still climbing
-at 200. One training seed per table except the scaling curve (three, six
-for ACT), and the scaling curve shows that the training seed matters a lot.
-
 **Walkthrough:** https://aungkaung1928.github.io/projects/so-arm100.html — the bench and the three policy projects built on it, explained end to end.
 
-## Why imitation after reinforcement learning on the same bench
+## At a glance
+
+Success on `lift` against the number of scripted demonstrations, 3 training seeds (`state`, `image`) and 6 (`act`) × 50 evaluation episodes per cell, 20 epochs; the faint points are the single seeds (`out/scaling_all.png`):
+
+![success against demonstrations for the three models](out/scaling_all.png)
+
+Same 200 demonstrations, three ways to learn from them, lift on nominal physics, 100 episodes × 5 evaluation seeds, mean ± sd over seeds, one training seed each:
+
+| policy | input | output | lift success |
+|---|---|---|---|
+| scripted expert (bench ceiling) | true cube pose | IK waypoints | 0.93 ± 0.02 |
+| BC, `ImagePolicy` | image + proprio | 1 action | 0.05 ± 0.02 |
+| DAgger, `ImagePolicy` | image + proprio, + 100 relabelled rollouts | 1 action | 0.14 ± 0.07 |
+| BC, `ACTLite` | image + proprio | chunk of 20 actions | 0.77 ± 0.05 |
+
+### Results
+
+| method | metric | value | condition |
+|---|---|---|---|
+| `ACTLite`, 200 demos, 30 epochs | lift success, nominal | 0.77 ± 0.05 | 100 ep × 5 seeds, one training seed |
+| `ImagePolicy`, 200 demos, 30 epochs | lift success, nominal | 0.05 ± 0.02 | same protocol |
+| `ImagePolicy` + DAgger, 5 iterations | lift success, nominal | 0.14 ± 0.07 | 200 demos + 100 relabelled rollouts, 5,970 s wall |
+| `ACTLite` | lift success, `small` cube | 0.38 ± 0.05 | expert 0.73 ± 0.05 on the same cell |
+| `ACTLite` | lift success, `laggy` / `weak` | 0.65 ± 0.02 / 0.70 ± 0.04 | expert loses at most 0.01 on these |
+| `ACTLite`, scaling curve, 200 episodes | lift success, nominal | 0.51 ± 0.36 | 6 training seeds × 50 ep, 20 epochs; seeds 0.92 / 0.82 / 0.76 vs 0.24 / 0.18 / 0.12 |
+| `ImagePolicy`, scaling curve, 200 episodes | lift success, nominal | 0.05 ± 0.06 | 3 training seeds × 50 ep; val L1 0.181 → 0.036 from 10 to 200 episodes |
+| `StateMLP`, scaling curve, 200 episodes | lift success, nominal | 0.03 ± 0.01 | proprio only, the floor |
+| `scripts/record_demos.py` | demonstrations kept | 200 of 218 (0.92) | 14,487 frames at 20 Hz, 634 s wall |
+| training, 200 episodes, 30 epochs, 4 threads | wall / val L1 | 212 s / 0.0339 (`ImagePolicy`), 432 s / 0.1229 (`ACTLite`) | L1 on normalised actions, final epoch |
+| Docker image | tests inside | 17 passed, 2 skipped | 3.16 GB, built 2026-09-23 |
+
+### Key points
+
+- **Chunking is the whole difference.** Same demonstrations, same encoder family, same L1 loss: the single-step `ImagePolicy` lifts 0.05 on nominal and `ACTLite` 0.77 (expert 0.93), and closed loop the single-step policy's worst-joint error against the expert grows from 0.4–0.5 rad in the first 10 steps to 1.1–4.6 rad by step 60–150, compounding error measured.
+- **More demonstrations do not rescue single-step cloning.** The image policy's validation L1 falls fivefold from 10 to 200 episodes (0.181 to 0.036) while its success stays between 0.01 and 0.05, whereas ACT's mean climbs 0.08, 0.24, 0.30, 0.41, 0.51 and has not levelled off at 200.
+- **The training seed is a bigger term than the dataset size.** At 200 episodes ACT's six seeds split into 0.92 / 0.82 / 0.76 and 0.24 / 0.18 / 0.12 with nothing between, so the 0.77 headline is one training seed and its ± over evaluation seeds understates the real uncertainty; validation L1 ordered the two groups at 200 episodes but not at 50 (L1 0.142 / 0.190 / 0.235 against success 0.76 / 0.04 / 0.44).
+- **DAgger helps the single-step policy, but little.** 0.05 → 0.14, four of five seeds above BC's best seed (about three standard errors), yet the per-iteration learner success 0.05 / 0.20 / 0.10 / 0.05 / 0.05 does not climb: relabelling fixes the states visited, not the missing temporal context.
+- **ACT transfers with two real losses, and the small cube is a perception problem.** Heavy and noisy stay within noise of nominal, laggy costs 0.12 and weak 0.06 where the expert loses at most 0.01, the 9 mm cube costs ACT 0.39 against the expert's 0.20, and the `slippery` row is inert in every table on this bench (bit-identical to nominal).
+
+<details><summary><b>Why imitation, the expert in two roles, and the three models</b></summary>
+
+### Why imitation after reinforcement learning on the same bench
 
 The sibling project [`so-arm100-rl`](https://github.com/AungKaung1928/so-arm100-rl)
 trains PPO on privileged 25-d state. Imitation is the other route to the
@@ -28,7 +60,16 @@ on one bench with one success criterion is what makes the comparison mean
 something. Here the policy sees what the real SO-ARM100 would see, the 15-d
 proprio vector and a 96x128 front-camera image, and nothing else.
 
-## The expert, twice
+**Status: measured.** Recording, training, the held-out physics table, DAgger
+and the scaling curve for all three models are filled from their JSONs;
+none is typed by hand. Headline: from the same 200 scripted demonstrations
+an ACT-style chunked policy lifts the cube 0.77 of the time against 0.05
+for single-step cloning (expert 0.93), and in the scaling curve more
+demonstrations do not help single-step cloning while ACT is still climbing
+at 200. One training seed per table except the scaling curve (three, six
+for ACT), and the scaling curve shows that the training seed matters a lot.
+
+### The expert, twice
 
 The bench's `ScriptedExpert` (IK waypoints on the simulator's true cube
 pose) plays two roles:
@@ -47,7 +88,7 @@ Its own success rate, measured by the bench, is the ceiling every learned
 policy is compared against; development readings were 1.00 reach, about
 0.9 lift / pick_place and 0.8-0.95 push on nominal physics.
 
-## Three models, one loss
+### Three models, one loss
 
 | model | input | output | why it is here |
 |---|---|---|---|
@@ -63,7 +104,11 @@ entries are masked. Normalisation statistics come from the training
 episodes only and travel with the checkpoint; the split is by episode, never
 by frame. The final epoch is reported, nothing is selected on validation.
 
-## Recording and training, measured
+</details>
+
+<details><summary><b>Recording, training, and the scaling curve</b></summary>
+
+### Recording and training, measured
 
 `scripts/record_demos.py --tasks lift:red --episodes 200` kept 200 of 218
 expert attempts (0.92), 14,487 frames at 20 Hz,
@@ -80,7 +125,7 @@ over the 20-step chunk, so the two columns are not comparable across rows.
 A val L1 of 0.03 does not mean the policy works: an offline loss is measured
 on the expert's own states, and the held-out table below is what counts.
 
-## The experiments
+### Scaling curve
 
 **Scaling curve** (`scaling.py`): for sizes 10, 25, 50, 100, 200 episodes
 and 3 training seeds each (6 for `act`), train on the first `size` episodes for 20 epochs and
@@ -161,6 +206,10 @@ What the curve says:
   BC-versus-ACT gap is large enough to survive that; the smaller
   differences in the held-out table (laggy −0.12, weak −0.06) may not.
 
+</details>
+
+<details><summary><b>DAgger and the held-out physics table</b></summary>
+
 **DAgger** (`dagger.py`): beta_i = 0.5 · 0.5^i, 20 rollouts per iteration,
 labels from the shadow expert, retrain from scratch on the aggregate (or
 `--warm`), 5 iterations. The comparison is BC on the same 200 demonstrations.
@@ -225,7 +274,9 @@ Mean ± std over the 5 seeds, 100 episodes each. What the table says:
   Fixing it (scale the finger friction too, or set contact `priority`) is
   a new experiment and would be labelled as one.
 
-## Experimental: demonstrations from a hand video
+</details>
+
+<details><summary><b>Experimental: demonstrations from a hand video</b></summary>
 
 `so_arm100_il/human_video.py` + `scripts/hand_to_arm.py`. MediaPipe Hand
 Landmarker on an overhead phone video; wrist position → a point in the
@@ -237,6 +288,8 @@ supplies everything the policy sees. It has run on synthetic landmarks
 only (`tests/test_human_video.py`); it has not been validated on a real
 recording and nothing here claims it works on one. The model file is not
 shipped; the script's docstring has the download URL.
+
+</details>
 
 ## Reproducing
 
@@ -255,7 +308,7 @@ The test suite includes an end-to-end smoke: record three 8-step episodes
 through the bench recorder, train all three models for two epochs, evaluate
 each for one episode. About a minute.
 
-## Limits, stated
+<details><summary><b>Limits, stated</b></summary>
 
 - Simulation only, scripted demonstrations only. A policy that imitates an
   IK script inherits the script's failure modes and none of a human's.
@@ -267,6 +320,8 @@ each for one episode. About a minute.
   there is little for a latent to encode, and that is an assumption until
   `--cvae` exists (see `docs/ISSUES.md`).
 - The human-video path is unvalidated on real video.
+
+</details>
 
 ## Licence
 
