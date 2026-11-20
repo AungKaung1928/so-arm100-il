@@ -1,0 +1,39 @@
+{
+  "ckpt": "runs/bc_act_lift.pt",
+  "task": "lift:red",
+  "model": "act",
+  "episodes": 100,
+  "seeds": 5,
+  "results": {
+    "real_fit": {
+      "task": "lift:red",
+      "physics": "real_fit",
+      "dr": null,
+      "n_episodes": 100,
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "success_rate": 0.746,
+      "success_std": 0.03209361307176246,
+      "per_seed": [
+        0.8,
+        0.73,
+        0.72,
+        0.73,
+        0.75
+      ],
+      "return_mean": 7.63929725951071,
+      "steps_mean": 98.114,
+      "first_success_p50": 76.0,
+      "first_success_p90": 106.0,
+      "wall_s": 3816.6283207160013,
+      "so_arm100_sim": "0.1.0",
+      "model_commit": "822c2d8f877dd166c5b7d3c9f7e3c3b6589473b7",
+      "date": "2026-11-21 01:17"
+    }
+  }
+}

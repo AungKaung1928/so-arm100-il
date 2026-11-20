@@ -248,6 +248,13 @@ table, and the expert's own table from the bench is the reference.
 | noisy | 0.93 ± 0.02 | 0.06 ± 0.01 | 0.72 ± 0.08 |
 | small | 0.73 ± 0.05 | 0.01 ± 0.02 | 0.38 ± 0.05 |
 
+Servo fitted to real SO-100 data (`real_fit`: kp 0.78×, joint frictionloss 2.5×, from
+so-arm100-sim's real2sim fit; needs so-arm100-sim a6f1691 or later), added 2026-11-21,
+`eval_policy.py --ckpt runs/bc_act_lift.pt --physics real_fit --jobs 4` →
+`runs/eval_bc_act_lift_realfit.json`: ACT 0.75 ± 0.03 (seeds 0.80 / 0.73 / 0.72 / 0.73 / 0.75)
+vs 0.77 ± 0.05 nominal, a drop inside the seed spread. The bench expert scores 0.97 on the
+same cell. BC image was not run on it (0.05 on nominal).
+
 Mean ± std over the 5 seeds, 100 episodes each. What the table says:
 
 - **Chunking is the whole difference.** Same demonstrations, same encoder
