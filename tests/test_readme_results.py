@@ -1,4 +1,4 @@
-"""README held-out table, real_fit sentence and DAgger numbers match the saved eval JSONs."""
+"""README held-out table, real_fit sentence, DAgger numbers and training table match the saved JSONs."""
 import json
 import os
 
@@ -48,3 +48,12 @@ def test_dagger_numbers():
     assert f"| `ImagePolicy` + DAgger, 5 iterations | lift success, nominal | {_ms(d['final'])} |" in README
     assert f"{round(d['wall_s']):,} s wall" in README
     assert f"per-iteration learner success {learner}" in FLAT
+
+
+def test_training_table_matches_runs():
+    for label, name in (("`ImagePolicy`", "bc_image_lift.json"), ("`ACTLite`", "bc_act_lift.json")):
+        r = json.load(open(os.path.join(ROOT, "runs", name)))
+        last = r["history"][-1]
+        row = (f"| {label} | {r['n_episodes_used']} | {last['epoch']} | {last['train_l1']:.4f} | "
+               f"{last['val_l1']:.4f} | {r['wall_s']:.0f} s | {r['threads']} |")
+        assert row in README, row
