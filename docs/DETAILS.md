@@ -206,17 +206,17 @@ What the curve says:
 `edge/act_backends.py` exports `runs/bc_act_lift.pt` (695k parameters, 20-step chunk) to
 ONNX and runs it in PyTorch, ONNX Runtime and OpenVINO on 1 thread, batch 1, image
 96x128 fed as float 0-255. Parity over 100 random inputs, then the three backends
-interleaved call by call (n = 2,000 each). Measured 2026-11-21 on an Intel Core Ultra 5
-225H in WSL2 (torch 2.11.0, onnxruntime 1.32.0, openvino 2026.4.1):
+interleaved call by call (n = 2,000 each). Measured 2026-11-23 on an Intel Core Ultra 5
+225H in WSL2, saved in `runs/act_backends.json` (torch 2.11.0, onnxruntime 1.32.0, openvino 2026.4.1):
 
 | backend | p50 / p99 per chunk | max \|out - PyTorch\| |
 |---|---|---|
-| PyTorch | 1.596 / 3.259 ms | 0 |
-| ONNX Runtime | 0.620 / 1.259 ms | 7.4e-6 |
-| OpenVINO | 0.782 / 1.486 ms | 1.2e-5 |
+| PyTorch | 1.953 / 4.259 ms | 0 |
+| ONNX Runtime | 0.774 / 1.688 ms | 7.4e-6 |
+| OpenVINO | 0.939 / 1.948 ms | 1.2e-5 |
 
 At the 20 Hz control rate one step is 50 ms, so every backend is far inside the budget;
-ONNX Runtime is 2.6x faster than PyTorch at this size. For the 450M-parameter SmolVLA
+ONNX Runtime is 2.5x faster than PyTorch at this size. For the 450M-parameter SmolVLA
 on the same CPU, one chunk takes seconds (so-arm100-vla, edge section).
 
 </details>
