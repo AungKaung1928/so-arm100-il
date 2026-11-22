@@ -68,3 +68,13 @@ def test_readme_per_seed_table_matches_saved_rows():
     top = sorted((act[200, s] for s in range(6)), reverse=True)
     split = " / ".join(f"{x:.2f}" for x in top[:3]) + " vs " + " / ".join(f"{x:.2f}" for x in top[3:])
     assert f"seeds {split} |" in readme
+
+
+def test_results_summary_rows_match_saved_runs():
+    readme = open(os.path.join(ROOT, "docs", "DETAILS.md")).read()
+    for kind, label in (("act", "`ACTLite`"), ("image", "`ImagePolicy`"), ("state", "`StateMLP`")):
+        s = {r["size"]: r for r in _saved(kind)["summary"]}[200]
+        row = f"| {label}, scaling curve, 200 episodes | lift success, nominal | {s['mean']:.2f} ± {s['std']:.2f} |"
+        assert row in readme, row
+        if kind != "state":
+            assert f"{row} {s['n']} training seeds × {_saved(kind)['args']['eval_n']} ep" in readme, kind

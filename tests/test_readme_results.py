@@ -67,3 +67,12 @@ def test_results_summary_rows_match_runs():
     want = (f"| {img['wall_s']:.0f} s / {img['history'][-1]['val_l1']:.4f} (`ImagePolicy`), "
             f"{a['wall_s']:.0f} s / {a['history'][-1]['val_l1']:.4f} (`ACTLite`) |")
     assert want in README, want
+
+
+def test_headline_summary_rows_match_evals():
+    image, act = _load("eval_bc_image_lift.json")["results"], _load("eval_bc_act_lift.json")["results"]
+    d = _load("dagger_image_lift.json")
+    lines = README.splitlines()
+    assert f"| `ACTLite`, 200 demos, 30 epochs | lift success, nominal | {_ms(act['nominal'])} |" in README
+    assert f"| `ImagePolicy`, 200 demos, 30 epochs | lift success, nominal | {_ms(image['nominal'])} |" in README
+    assert f"| lift, nominal | {_ms(image['nominal'])} | {_ms(d['final'])} |" in lines
