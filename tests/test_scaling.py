@@ -50,3 +50,22 @@ def test_rerun_skips_rows_already_on_disk(tmp_path, monkeypatch):
         scaling.run(list(range(30)), "state", [10, 25], 2, "lift", 1, 1, 1, {}, 1,
                     log=lambda *_: None, rows_path=str(path))
     assert called == [(25, 1)]
+
+
+def _rows(kind):
+    rows = [json.loads(l) for l in open(os.path.join(ROOT, "runs", f"scaling_{kind}.rows.jsonl"))]
+    return {(r["size"], r["seed"]): r["success"] for r in rows}
+
+
+def test_readme_per_seed_table_matches_saved_rows():
+    readme = open(os.path.join(ROOT, "README.md")).read()
+    lines = readme.splitlines()
+    head = lines.index("| episodes | `image` (0 / 1 / 2) | `act` (0 / 1 / 2 / 3 / 4 / 5) |")
+    image, act = _rows("image"), _rows("act")
+    expect = [f"| {n} | " + " / ".join(f"{image[n, s]:.2f}" for s in range(3)) + " | "
+              + " / ".join(f"{act[n, s]:.2f}" for s in range(6)) + " |" for n in (10, 25, 50, 100, 200)]
+    assert lines[head + 2:head + 7] == expect
+    # summary row: the 200-episode ACT seeds split into a high and a low group of three
+    top = sorted((act[200, s] for s in range(6)), reverse=True)
+    split = " / ".join(f"{x:.2f}" for x in top[:3]) + " vs " + " / ".join(f"{x:.2f}" for x in top[3:])
+    assert f"seeds {split} |" in readme
