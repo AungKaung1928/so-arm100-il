@@ -57,3 +57,13 @@ def test_training_table_matches_runs():
         row = (f"| {label} | {r['n_episodes_used']} | {last['epoch']} | {last['train_l1']:.4f} | "
                f"{last['val_l1']:.4f} | {r['wall_s']:.0f} s | {r['threads']} |")
         assert row in README, row
+
+
+def test_results_summary_rows_match_runs():
+    act = _load("eval_bc_act_lift.json")["results"]
+    assert f"| `ACTLite` | lift success, `small` cube | {_ms(act['small'])} |" in README
+    assert f"| `ACTLite` | lift success, `laggy` / `weak` | {_ms(act['laggy'])} / {_ms(act['weak'])} |" in README
+    img, a = _load("bc_image_lift.json"), _load("bc_act_lift.json")
+    want = (f"| {img['wall_s']:.0f} s / {img['history'][-1]['val_l1']:.4f} (`ImagePolicy`), "
+            f"{a['wall_s']:.0f} s / {a['history'][-1]['val_l1']:.4f} (`ACTLite`) |")
+    assert want in README, want
