@@ -3,7 +3,7 @@ import json
 import os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-README = open(os.path.join(ROOT, "README.md")).read()
+README = open(os.path.join(ROOT, "docs", "DETAILS.md")).read()
 FLAT = " ".join(README.split())
 
 

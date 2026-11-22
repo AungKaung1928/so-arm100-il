@@ -25,7 +25,7 @@ def test_summary_recomputes_from_rows(kind):
 
 
 def test_readme_table_matches_saved_runs():
-    lines = open(os.path.join(ROOT, "README.md")).read().splitlines()
+    lines = open(os.path.join(ROOT, "docs", "DETAILS.md")).read().splitlines()
     head = lines.index("| episodes | `state` | `image` | `act` |")
     table = lines[head + 2:head + 7]
     sums = {k: {s["size"]: s for s in _saved(k)["summary"]} for k in KINDS}
@@ -57,7 +57,7 @@ def _rows(kind):
 
 
 def test_readme_per_seed_table_matches_saved_rows():
-    readme = open(os.path.join(ROOT, "README.md")).read()
+    readme = open(os.path.join(ROOT, "docs", "DETAILS.md")).read()
     lines = readme.splitlines()
     head = lines.index("| episodes | `image` (0 / 1 / 2) | `act` (0 / 1 / 2 / 3 / 4 / 5) |")
     image, act = _rows("image"), _rows("act")
