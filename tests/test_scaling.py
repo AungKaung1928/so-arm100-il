@@ -53,8 +53,7 @@ def test_rerun_skips_rows_already_on_disk(tmp_path, monkeypatch):
 
 
 def _rows(kind):
-    rows = [json.loads(l) for l in open(os.path.join(ROOT, "runs", f"scaling_{kind}.rows.jsonl"))]
-    return {(r["size"], r["seed"]): r["success"] for r in rows}
+    return {(r["size"], r["seed"]): r["success"] for r in _saved(kind)["rows"]}
 
 
 def test_readme_per_seed_table_matches_saved_rows():
