@@ -2,16 +2,18 @@
 1 thread, batch 1, image 96x128 as float 0-255 (the model casts and normalizes inside).
 Parity over 100 random inputs, then the three backends interleaved call by call.
 
-    python edge/act_backends.py runs/bc_act_lift.pt /tmp/act_edge 2000
+    python edge/act_backends.py runs/bc_act_lift.pt /tmp/act_edge 2000 runs/act_backends.json
+The optional 4th argument writes the numbers as JSON (tests/test_act_backends_readme.py reads it).
 Needs torch, onnx, onnxruntime, openvino (versions printed).
 """
-import os, sys, time
+import json, os, sys, time
 sys.path[:0] = [os.path.dirname(os.path.dirname(os.path.abspath(__file__)))]
 import numpy as np, torch, onnxruntime as ort, openvino as ov
 from so_arm100_il.policy import load_checkpoint
 from so_arm100_il.data import STATE_DIM
 torch.set_num_threads(1)
 ckpt, out, N = sys.argv[1], sys.argv[2], int(sys.argv[3])
+json_out = sys.argv[4] if len(sys.argv) > 4 else None
 os.makedirs(out, exist_ok=True)
 model, _, _ = load_checkpoint(ckpt)
 H, W = 96, 128
@@ -29,8 +31,10 @@ def v(x): return cm([x[0], x[1]])[cm.outputs[0]]
 runs = {"pytorch": t, "onnxruntime": o, "openvino": v}
 rng = np.random.default_rng(0)
 xs = [(rng.standard_normal((1, STATE_DIM)).astype(np.float32), rng.uniform(0, 255, (1, 3, H, W)).astype(np.float32)) for _ in range(100)]
+diff = {"pytorch": 0.0}
 for k in ("onnxruntime", "openvino"):
-    print(f"{k}: max |out - pytorch| over 100 inputs {max(np.abs(runs[k](x) - t(x)).max() for x in xs):.2e}")
+    diff[k] = float(max(np.abs(runs[k](x) - t(x)).max() for x in xs))
+    print(f"{k}: max |out - pytorch| over 100 inputs {diff[k]:.2e}")
 ts = {k: [] for k in runs}
 for k in runs:
     for x in xs[:20]: runs[k](x)
@@ -42,3 +46,11 @@ print(f"torch {torch.__version__}, onnxruntime {ort.__version__}, openvino {ov._
       f"{sum(p.numel() for p in model.parameters())} params, chunk {model.chunk}")
 for k in runs:
     print(f"{k:12s} 1 thread batch 1: p50 {np.median(ts[k])*1e3:.3f} ms p99 {np.percentile(ts[k], 99)*1e3:.3f} ms (n {N})")
+if json_out:
+    with open(json_out, "w") as f:
+        json.dump({"n": N, "params": sum(p.numel() for p in model.parameters()), "chunk": model.chunk,
+                   "versions": {"torch": torch.__version__, "onnxruntime": ort.__version__,
+                                "openvino": ov.__version__.split("-")[0]},
+                   "backends": {k: {"p50_ms": float(np.median(ts[k]) * 1e3), "p99_ms": float(np.percentile(ts[k], 99) * 1e3),
+                                    "max_abs_diff": diff[k]} for k in runs}}, f, indent=1)
+    print("wrote", json_out)
