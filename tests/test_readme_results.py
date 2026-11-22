@@ -76,3 +76,12 @@ def test_headline_summary_rows_match_evals():
     assert f"| `ACTLite`, 200 demos, 30 epochs | lift success, nominal | {_ms(act['nominal'])} |" in README
     assert f"| `ImagePolicy`, 200 demos, 30 epochs | lift success, nominal | {_ms(image['nominal'])} |" in README
     assert f"| lift, nominal | {_ms(image['nominal'])} | {_ms(d['final'])} |" in lines
+
+
+def test_heldout_table_expert_column_matches_bench_copy():
+    """Expert column = the bench's scripted-expert lift cells (runs/expert_lift_bench.json, copied with its source commit)."""
+    bench = _load("expert_lift_bench.json")
+    assert len(bench["source_commit"]) == 40 and len(bench["cells"]) == 7
+    lines = README.splitlines()
+    for physics, r in bench["cells"].items():
+        assert any(l.startswith(f"| {physics} | {_ms(r)} |") for l in lines), physics

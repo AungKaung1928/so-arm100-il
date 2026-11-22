@@ -25,7 +25,7 @@ cd so-arm100-il
 python3 -m venv .venv && . .venv/bin/activate                                    # first time only
 pip install torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cpu  # first time only
 pip install -r requirements.txt && pip install -e ".[dev]"                       # first time only
-python -m pytest -q tests          # 41 passed in ~20 s, including a record-train-evaluate smoke
+python -m pytest -q tests          # 42 passed in ~20 s, including a record-train-evaluate smoke
 ```
 
 Recording, training, evaluation and Docker: [docs/DETAILS.md#reproducing](docs/DETAILS.md#reproducing).

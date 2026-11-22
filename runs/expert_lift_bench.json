@@ -1,0 +1,44 @@
+{
+ "source": "github.com/AungKaung1928/so-arm100-sim runs/expert_success.json",
+ "source_commit": "14a0f0b78c0d1bd0a6a44449dcbe9652ccfce149",
+ "note": "lift cells copied unchanged from the bench's scripted-expert run; the expert column of the held-out table",
+ "episodes": 100,
+ "seeds": 5,
+ "cells": {
+  "nominal": {
+   "success_rate": 0.9339999999999999,
+   "success_std": 0.015165750888103064,
+   "n_episodes": 100
+  },
+  "heavy": {
+   "success_rate": 0.9019999999999999,
+   "success_std": 0.016431676725155,
+   "n_episodes": 100
+  },
+  "slippery": {
+   "success_rate": 0.9339999999999999,
+   "success_std": 0.015165750888103064,
+   "n_episodes": 100
+  },
+  "weak": {
+   "success_rate": 0.966,
+   "success_std": 0.015165750888103114,
+   "n_episodes": 100
+  },
+  "laggy": {
+   "success_rate": 0.922,
+   "success_std": 0.03114482300479486,
+   "n_episodes": 100
+  },
+  "noisy": {
+   "success_rate": 0.9339999999999999,
+   "success_std": 0.015165750888103064,
+   "n_episodes": 100
+  },
+  "small": {
+   "success_rate": 0.732,
+   "success_std": 0.047644516998286424,
+   "n_episodes": 100
+  }
+ }
+}
