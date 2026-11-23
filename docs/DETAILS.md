@@ -31,7 +31,7 @@ Same 200 demonstrations, three ways to learn from them, lift on nominal physics,
 | `StateMLP`, scaling curve, 200 episodes | lift success, nominal | 0.03 ± 0.01 | proprio only, the floor |
 | `scripts/record_demos.py` | demonstrations kept | 200 of 218 (0.92) | 14,487 frames at 20 Hz, 634 s wall |
 | training, 200 episodes, 30 epochs, 4 threads | wall / val L1 | 212 s / 0.0339 (`ImagePolicy`), 432 s / 0.1229 (`ACTLite`) | L1 on normalised actions, final epoch |
-| Docker image | tests inside | 17 passed, 2 skipped | 3.16 GB, built 2026-09-23 |
+| Docker image | tests inside | 42 passed, 2 skipped | 3.29 GB, built 2026-11-23 |
 
 ### Key points
 
@@ -322,7 +322,7 @@ pip install -r requirements.txt && pip install -e ".[dev]"
 
 Python ≥ 3.12 (lerobot). `MUJOCO_GL=glfw` with a display or `egl`/`osmesa`
 headless for anything that renders. `docker build -t so-arm100-il . && docker run --rm so-arm100-il`
-runs the tests that need no GL context. Image built on 2026-09-23 and its default command passed inside it (17 tests passed, 2 skipped), image size 3.16 GB.
+runs the tests that need no GL context. Image built on 2026-11-23 and its default command passed inside it (42 tests passed, 2 skipped), image size 3.29 GB.
 
 The test suite includes an end-to-end smoke: record three 8-step episodes
 through the bench recorder, train all three models for two epochs, evaluate

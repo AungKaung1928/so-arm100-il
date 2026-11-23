@@ -19,4 +19,8 @@ RUN pip install --no-cache-dir torch==2.11.0 --index-url https://download.pytorc
  && pip install --no-cache-dir -r requirements.txt \
  && pip install --no-cache-dir -e ".[dev]"
 
+# README/DETAILS <-> runs/*.json tests read these.
+COPY docs ./docs
+COPY runs ./runs
+
 CMD ["python", "-m", "pytest", "tests"]
