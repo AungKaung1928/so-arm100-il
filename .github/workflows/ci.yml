@@ -25,3 +25,13 @@ jobs:
           pip install -e ".[dev]"
       - name: tests
         run: python -m pytest tests
+
+  docker:
+    # The documented `docker run --rm so-arm100-il`; a Dockerfile CI never builds goes stale.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: build image
+        run: docker build -t so-arm100-il .
+      - name: default command (tests inside the image)
+        run: docker run --rm so-arm100-il
