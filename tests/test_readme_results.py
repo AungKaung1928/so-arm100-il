@@ -85,3 +85,11 @@ def test_heldout_table_expert_column_matches_bench_copy():
     lines = README.splitlines()
     for physics, r in bench["cells"].items():
         assert any(l.startswith(f"| {physics} | {_ms(r)} |") for l in lines), physics
+
+
+def test_record_demos_row_matches_recording_log():
+    """runs/recording_log_lift_red.json is record_demos.py's own log (data/lift_red/recording_log.json, copied unchanged)."""
+    r = _load("recording_log_lift_red.json")
+    t = r["tasks"]["lift:red"]
+    assert (f"| `scripts/record_demos.py` | demonstrations kept | {t['kept']} of {t['attempts']} ({t['kept'] / t['attempts']:.2f}) | "
+            f"{t['frames']:,} frames at 20 Hz, {r['wall_s']:.0f} s wall |") in README

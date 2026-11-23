@@ -1,0 +1,21 @@
+{
+  "tasks": {
+    "lift:red": {
+      "kept": 200,
+      "attempts": 218,
+      "frames": 14487,
+      "expert_success_during_recording": 0.9174311926605505
+    }
+  },
+  "cameras": [
+    "front"
+  ],
+  "size": [
+    96,
+    128
+  ],
+  "dr": false,
+  "episodes": 200,
+  "frames": 14487,
+  "wall_s": 634.4113195449972
+}
